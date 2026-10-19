@@ -59,7 +59,7 @@ class CommentAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request: HttpRequest, obj: Comment | None = None) -> bool:
         return request.user.is_superuser or (
-                obj is not None and (request.user == obj.post.user or request.user == obj.user.user))
+                obj is not None and (request.user == obj.post.user.user or request.user == obj.user.user))
 
     def has_add_permission(self, request: HttpRequest) -> bool:
         return True
@@ -73,8 +73,8 @@ class CommentAdmin(admin.ModelAdmin):
 
 class FileAdmin(admin.ModelAdmin):
     def has_view_permission(self, request: HttpRequest, obj: File | None = None) -> bool:
-        return obj is not None and Block.objects.filter(blocker__user=obj.post.user.user,
-                                                        blocked__user=request.user).exists()
+        return request.user.is_superuser or (obj is not None and not Block.objects.filter(
+            blocker__user=obj.post.user.user, blocked__user=request.user).exists())
 
     def has_change_permission(self, request: HttpRequest, obj: File | None = None) -> bool:
         return obj is not None and request.user == obj.post.user.user
